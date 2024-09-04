@@ -1,0 +1,83 @@
+#1.Checkout Feature Branch 
+#2.Setup Git login
+#3.Build- Install the maven pkg 
+#4.Run the code quality checks 
+#5.Run unit test 
+#6.Deploy to the non production pipelines to QA/Dev
+#7.Run performance test 
+#8.Deploy to the production pipelines to Stage/Prod
+#9.Push Changes 
+
+name: CI/CD pipeline for Adobe Commerce  Manager Cloud
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Feature Branch 
+      uses: feature/kx-commerce 
+
+    - name: Set up Git
+      run: |
+      git config user.name 'komatsu:username'
+      git config user.email 'kmatsu:username@komatsu.email'
+  
+# Define the pipeline stages
+  stages:
+    - name: Build and Test
+      steps:
+        - name: Build
+# Build first AEM project
+          script: |
+          mvn clean install -P autoInstallPackage
+    
+# Run code quality checks
+    - name: Code Quality Check
+        script: |
+        mvn sonar:sonar
+
+# Run unit tests
+    - name: Unit Tests
+        script: |
+        mvn test
+
+# Deploy to the Integration/Stage environment
+    - name: Deploy to Integration
+      steps:
+        - name: Deploy
+          script: |
+          mvn -P autoInstallPackage -D env=Int
+
+    - name: Deploy to Stage
+      steps:
+        - name: Deploy
+          script: |
+          mvn -P autoInstallPackage -D env=Stage     
+
+# Run performance tests
+    - name: Performance Testing
+      steps:
+        - name: Performance Test
+          script: |
+          mvn -P performanceTest
+
+# Deploy to the production environment
+    - name: Deploy to Prod
+      steps:
+        - name: Deploy
+          script: |
+          mvn -P autoInstallPackage -D env=Prod
+
+    - name: Push Changes to Feature Branch
+      steps: 
+        - name: Commit and push 
+# Add , commit and push changes
+          scripts: 
+          git add .
+          git commit -m " new changes"  
+          git push origin feature/kx-commerce
